@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from sklearn.preprocessing import OneHotEncoder
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 raw_data_path = os.path.join(BASE_DIR, "data", "raw", "WA_Fn-UseC_-Telco-Customer-Churn.csv")
@@ -36,11 +37,25 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
     # Convertir variable binaria Gender (Male/Female) a numérica
     df['gender'] = df['gender'].replace({'Male': 1, 'Female': 0})
 
-    # Detectar categóricas
-    categorical_cols = df.select_dtypes(include="str").columns
+    # Crear variables adicionales
+    # Variables económicas
+    df['AvgChargePerMonth'] = df['TotalCharges'] / (df['tenure'] + 1)
+    df['ChargeGap'] = df['TotalCharges'] - df['MonthlyCharges'] * df['tenure'] # Diferencia entre el gasto real y lo esperado
 
-    # One-hot encoding
-    df = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
+    # Variables demográficas
+    df["NewCustomer"] = (df["tenure"] < 12).astype(int)
+
+    # Variables de servicio
+    df["NumServices"] = (
+        (df["InternetService"] != "No").astype(int) +
+        (df["OnlineSecurity"] == "Yes").astype(int) +
+        (df["OnlineBackup"] == "Yes").astype(int) +
+        (df["DeviceProtection"] == "Yes").astype(int) +
+        (df["TechSupport"] == "Yes").astype(int) +
+        (df["StreamingTV"] == "Yes").astype(int) +
+        (df["StreamingMovies"] == "Yes").astype(int)
+    )
+
     return df
 
 def main():
