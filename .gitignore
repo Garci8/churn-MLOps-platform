@@ -222,3 +222,6 @@ data/raw/*
 
 data/processed/*
 !data/processed/.gitkeep
+
+models/*.pkl
+models/*.joblib
