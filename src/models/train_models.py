@@ -1,4 +1,6 @@
 import os
+import json
+from datetime import datetime
 import pandas as pd
 import joblib
 from sklearn.model_selection import GridSearchCV
@@ -12,6 +14,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 from sklearn.dummy import DummyClassifier
 from xgboost import XGBClassifier
 from src.data.make_dataset import load_dataset
+from src.visualization.visualize import generate_shap_summary
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 processed_data_path = os.path.join(BASE_DIR, "data", "processed", "data.csv")
@@ -258,6 +261,59 @@ def main() -> None:
         os.makedirs(models_dir, exist_ok=True)
         joblib.dump(best_pipeline, model_path)
         print(f"Pipeline del mejor modelo guardado con éxito en: {model_path}")
+
+    # Extraer los mejores hiperparámetros encontrados para el modelo seleccionado
+    model_step = best_pipeline.named_steps['model']
+    best_params = {
+        k.replace("model__", ""): model_step.get_params()[k.replace("model__", "")]
+        for k in param_grids[best_model_name].keys()
+    }
+
+    # Registrar las métricas del modelo actual
+    current_run_metrics = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "model_name": best_model_name,
+        "hyperparameters": best_params,
+        "validation_metrics": {
+            "accuracy": results[best_model_name]["accuracy"],
+            "roc_auc": results[best_model_name]["roc_auc"],
+            "f1": results[best_model_name]["f1"]
+        },
+        "test_metrics": {
+            "accuracy": test_accuracy,
+            "roc_auc": test_roc_auc,
+            "f1": test_f1
+        },
+        "saved_as_best": should_save
+    }
+
+    # 1. Guardar/actualizar el histórico de experimentos
+    history_path = os.path.join(models_dir, "metrics_history.json")
+    if os.path.exists(history_path):
+        try:
+            with open(history_path, "r", encoding="utf-8") as f:
+                history = json.load(f)
+                if not isinstance(history, list):
+                    history = []
+        except Exception:
+            history = []
+    else:
+        history = []
+    
+    history.append(current_run_metrics)
+    with open(history_path, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=4, ensure_ascii=False)
+    print(f"Historial de métricas actualizado en: {history_path}")
+
+    # 2. Guardar métricas del mejor modelo activo si ha sido guardado
+    if should_save:
+        active_metrics_path = os.path.join(models_dir, "metrics.json")
+        with open(active_metrics_path, "w", encoding="utf-8") as f:
+            json.dump(current_run_metrics, f, indent=4, ensure_ascii=False)
+        print(f"Métricas del mejor modelo activo guardadas en: {active_metrics_path}")
+
+    # Generar y guardar gráfico SHAP para el mejor modelo
+    generate_shap_summary(best_pipeline, best_model_name, X_val, models_dir)
 
 if __name__ == "__main__":
     main()
