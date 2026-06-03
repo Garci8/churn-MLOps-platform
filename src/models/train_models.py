@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import joblib
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -8,6 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
+from sklearn.dummy import DummyClassifier
 from xgboost import XGBClassifier
 from src.data.make_dataset import load_dataset
 
@@ -67,7 +69,7 @@ def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
 # CONSTRUCCIÓN DE PIPELINES DE MODELO
 # ==============================================================================
 
-def build_pipeline(model_name: str) -> Pipeline:
+def build_pipeline(model_name: str, scale_pos_weight: float = 1.0) -> Pipeline:
     """Crea un pipeline basado en el nombre del modelo.
 
     Configura los preprocesadores (ColumnTransformer) y los estimadores. Solo 
@@ -75,6 +77,7 @@ def build_pipeline(model_name: str) -> Pipeline:
 
     Args:
         model_name (str): Identificador del modelo ('logreg', 'rf', 'xgboost').
+        scale_pos_weight (float): Relación de desbalanceo (negativos / positivos) para XGBoost.
 
     Returns:
         Pipeline: Pipeline de scikit-learn que combina el preprocesamiento y el modelo.
@@ -84,21 +87,25 @@ def build_pipeline(model_name: str) -> Pipeline:
             ("num", StandardScaler(), numerical_cols),
             ("cat", OneHotEncoder(drop="first"), categorical_cols)
         ], remainder="passthrough")
-        model = LogisticRegression(max_iter=1000)
+        model = LogisticRegression(max_iter=3000, class_weight="balanced", tol=1e-5)
 
     elif model_name == "rf":
         preprocess = ColumnTransformer([
             ("num", "passthrough", numerical_cols),
             ("cat", OneHotEncoder(drop="first"), categorical_cols)
         ], remainder="passthrough")
-        model = RandomForestClassifier(random_state=42)
+        model = RandomForestClassifier(random_state=42, class_weight="balanced")
     
     elif model_name == "xgboost":
         preprocess = ColumnTransformer([
             ("num", "passthrough", numerical_cols),
             ("cat", OneHotEncoder(drop="first"), categorical_cols)
         ], remainder="passthrough")
-        model = XGBClassifier(random_state=42, use_label_encoder=False, eval_metric="logloss")
+        model = XGBClassifier(
+            random_state=42, 
+            eval_metric="logloss",
+            scale_pos_weight=scale_pos_weight
+        )
 
     return Pipeline([
         ("preprocess", preprocess),
@@ -129,24 +136,71 @@ def main() -> None:
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.30, random_state=42, stratify=y)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp)
     
+    # Calcular proporción de desbalanceo para XGBoost (negativos / positivos)
+    num_neg = (y_train == 0).sum()
+    num_pos = (y_train == 1).sum()
+    scale_pos_weight = num_neg / num_pos
+    
+    # Definir grillas de parámetros para GridSearchCV
+    param_grids = {
+        "logreg": {
+            "model__C": [0.01, 0.1, 1, 10, 100],
+            "model__l1_ratio": [0.0, 0.25, 0.5, 0.75, 1.0],  # 0.0 es L2, 1.0 es L1
+            "model__solver": ["saga"]       # saga soporta l1_ratio
+        },
+        "rf": {
+            "model__n_estimators": [50, 100, 200],
+            "model__max_depth": [None, 10, 20],
+            "model__min_samples_split": [2, 5, 10]
+        },
+        "xgboost": {
+            "model__n_estimators": [50, 100, 200],
+            "model__learning_rate": [0.01, 0.1, 0.2],
+            "model__max_depth": [3, 5, 7]
+        }
+    }
+
     results = {}
     pipelines = {}
 
+    # Entrenar y evaluar baseline (Dummy Classifier)
+    dummy_model = DummyClassifier(strategy="stratified", random_state=42)
+    dummy_model.fit(X_train, y_train)
+    y_val_pred_dummy = dummy_model.predict(X_val)
+    y_val_prob_dummy = dummy_model.predict_proba(X_val)[:, 1]
+    
+    results["dummy"] = {
+        "accuracy": accuracy_score(y_val, y_val_pred_dummy),
+        "roc_auc": roc_auc_score(y_val, y_val_prob_dummy),
+        "f1": f1_score(y_val, y_val_pred_dummy)
+    }
+
     # Entrenar y evaluar en conjunto de Validación
     for model_name in ["logreg", "rf", "xgboost"]:
-        pipeline = build_pipeline(model_name)
-        pipeline.fit(X_train, y_train)
+        pipeline = build_pipeline(model_name, scale_pos_weight=scale_pos_weight)
         
-        # Evaluar en Validación
-        y_val_pred = pipeline.predict(X_val)
-        y_val_prob = pipeline.predict_proba(X_val)[:, 1]
+        # GridSearchCV para encontrar los mejores hiperparámetros
+        grid = GridSearchCV(
+            estimator=pipeline,
+            param_grid=param_grids[model_name],
+            cv=5,
+            scoring="f1",
+            n_jobs=-1
+        )
+        grid.fit(X_train, y_train)
+        
+        best_pipeline = grid.best_estimator_
+        
+        # Evaluar el mejor pipeline en Validación
+        y_val_pred = best_pipeline.predict(X_val)
+        y_val_prob = best_pipeline.predict_proba(X_val)[:, 1]
         
         results[model_name] = {
             "accuracy": accuracy_score(y_val, y_val_pred),
             "roc_auc": roc_auc_score(y_val, y_val_prob),
             "f1": f1_score(y_val, y_val_pred)
         }
-        pipelines[model_name] = pipeline
+        pipelines[model_name] = best_pipeline
 
     # Imprimir resultados de Validación
     print("\n=== Resultados en Validación ===")
@@ -157,8 +211,9 @@ def main() -> None:
         print(f"{model_name:<15} | {metrics['accuracy']:<10.4f} | {metrics['roc_auc']:<10.4f} | {metrics['f1']:<10.4f}")
     print("=" * 55)
 
-    # Seleccionar el mejor modelo basado en F1-Score en Validación
-    best_model_name = max(results, key=lambda k: results[k]["f1"])
+    # Seleccionar el mejor modelo basado en F1-Score en Validación (excluyendo el baseline dummy)
+    candidate_results = {k: v for k, v in results.items() if k != "dummy"}
+    best_model_name = max(candidate_results, key=lambda k: candidate_results[k]["f1"])
     best_pipeline = pipelines[best_model_name]
     
     print(f"\nMejor modelo seleccionado: {best_model_name}")
