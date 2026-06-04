@@ -1,20 +1,21 @@
 {
-    "timestamp": "2026-06-03 18:31:24",
+    "timestamp": "2026-06-04 18:29:13",
+    "threshold": 0.5,
     "model_name": "rf",
     "hyperparameters": {
         "n_estimators": 100,
         "max_depth": 10,
-        "min_samples_split": 2
+        "min_samples_split": 10
     },
     "validation_metrics": {
-        "accuracy": 0.7746212121212122,
-        "roc_auc": 0.8444081369661267,
-        "f1": 0.6404833836858006
+        "accuracy": 0.7727272727272727,
+        "roc_auc": 0.8428962628865979,
+        "f1": 0.6470588235294118
     },
     "test_metrics": {
-        "accuracy": 0.7861873226111636,
-        "roc_auc": 0.8345883626224457,
-        "f1": 0.6366559485530546
+        "accuracy": 0.7786187322611163,
+        "roc_auc": 0.8393119198737938,
+        "f1": 0.629746835443038
     },
     "saved_as_best": true
 }

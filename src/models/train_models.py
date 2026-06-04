@@ -19,6 +19,9 @@ from src.visualization.visualize import generate_shap_summary
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 processed_data_path = os.path.join(BASE_DIR, "data", "processed", "data.csv")
 
+# Umbral de probabilidad para la clasificación
+THRESHOLD = 0.5
+
 # Columnas categóricas a las que se les aplicará One-Hot Encoding
 categorical_cols = [
     "MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup", 
@@ -195,8 +198,8 @@ def main() -> None:
         best_pipeline = grid.best_estimator_
         
         # Evaluar el mejor pipeline en Validación
-        y_val_pred = best_pipeline.predict(X_val)
         y_val_prob = best_pipeline.predict_proba(X_val)[:, 1]
+        y_val_pred = (y_val_prob >= THRESHOLD).astype(int)
         
         results[model_name] = {
             "accuracy": accuracy_score(y_val, y_val_pred),
@@ -222,8 +225,8 @@ def main() -> None:
     print(f"\nMejor modelo seleccionado: {best_model_name}")
 
     # Evaluar el mejor modelo en el conjunto de Test
-    y_test_pred = best_pipeline.predict(X_test)
     y_test_prob = best_pipeline.predict_proba(X_test)[:, 1]
+    y_test_pred = (y_test_prob >= THRESHOLD).astype(int)
     
     test_accuracy = accuracy_score(y_test, y_test_pred)
     test_roc_auc = roc_auc_score(y_test, y_test_prob)
@@ -242,7 +245,8 @@ def main() -> None:
     if os.path.exists(model_path):
         try:
             previous_pipeline = joblib.load(model_path)
-            y_val_pred_prev = previous_pipeline.predict(X_val)
+            y_val_prob_prev = previous_pipeline.predict_proba(X_val)[:, 1]
+            y_val_pred_prev = (y_val_prob_prev >= THRESHOLD).astype(int)
             previous_f1 = f1_score(y_val, y_val_pred_prev)
             current_f1 = results[best_model_name]["f1"]
 
@@ -272,6 +276,7 @@ def main() -> None:
     # Registrar las métricas del modelo actual
     current_run_metrics = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "threshold": THRESHOLD,
         "model_name": best_model_name,
         "hyperparameters": best_params,
         "validation_metrics": {

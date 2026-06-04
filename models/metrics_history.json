@@ -1,21 +1,49 @@
 [
     {
-        "timestamp": "2026-06-03 18:16:14",
+        "timestamp": "2026-06-03 18:52:52",
+        "threshold": 0.4,
         "model_name": "rf",
+        "hyperparameters": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "min_samples_split": 2
+        },
         "validation_metrics": {
-            "accuracy": 0.7746212121212122,
+            "accuracy": 0.740530303030303,
             "roc_auc": 0.8444081369661267,
-            "f1": 0.6404833836858006
+            "f1": 0.6327077747989276
         },
         "test_metrics": {
-            "accuracy": 0.7861873226111636,
+            "accuracy": 0.750236518448439,
             "roc_auc": 0.8345883626224457,
-            "f1": 0.6366559485530546
+            "f1": 0.6302521008403361
         },
         "saved_as_best": false
     },
     {
-        "timestamp": "2026-06-03 18:31:24",
+        "timestamp": "2026-06-03 20:57:11",
+        "threshold": 0.65,
+        "model_name": "logreg",
+        "hyperparameters": {
+            "C": 1,
+            "l1_ratio": 0.75,
+            "solver": "saga"
+        },
+        "validation_metrics": {
+            "accuracy": 0.7831439393939394,
+            "roc_auc": 0.8496870397643593,
+            "f1": 0.6252045826513911
+        },
+        "test_metrics": {
+            "accuracy": 0.7899716177861873,
+            "roc_auc": 0.8452920350735592,
+            "f1": 0.6118881118881119
+        },
+        "saved_as_best": true
+    },
+    {
+        "timestamp": "2026-06-03 22:56:43",
+        "threshold": 0.5,
         "model_name": "rf",
         "hyperparameters": {
             "n_estimators": 100,
@@ -31,6 +59,69 @@
             "accuracy": 0.7861873226111636,
             "roc_auc": 0.8345883626224457,
             "f1": 0.6366559485530546
+        },
+        "saved_as_best": true
+    },
+    {
+        "timestamp": "2026-06-04 16:52:13",
+        "threshold": 0.5,
+        "model_name": "rf",
+        "hyperparameters": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "min_samples_split": 2
+        },
+        "validation_metrics": {
+            "accuracy": 0.7746212121212122,
+            "roc_auc": 0.8444081369661267,
+            "f1": 0.6404833836858006
+        },
+        "test_metrics": {
+            "accuracy": 0.7861873226111636,
+            "roc_auc": 0.8345883626224457,
+            "f1": 0.6366559485530546
+        },
+        "saved_as_best": false
+    },
+    {
+        "timestamp": "2026-06-04 17:42:28",
+        "threshold": 0.5,
+        "model_name": "rf",
+        "hyperparameters": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "min_samples_split": 2
+        },
+        "validation_metrics": {
+            "accuracy": 0.7746212121212122,
+            "roc_auc": 0.8444081369661267,
+            "f1": 0.6404833836858006
+        },
+        "test_metrics": {
+            "accuracy": 0.7861873226111636,
+            "roc_auc": 0.8345883626224457,
+            "f1": 0.6366559485530546
+        },
+        "saved_as_best": false
+    },
+    {
+        "timestamp": "2026-06-04 18:29:13",
+        "threshold": 0.5,
+        "model_name": "rf",
+        "hyperparameters": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "min_samples_split": 10
+        },
+        "validation_metrics": {
+            "accuracy": 0.7727272727272727,
+            "roc_auc": 0.8428962628865979,
+            "f1": 0.6470588235294118
+        },
+        "test_metrics": {
+            "accuracy": 0.7786187322611163,
+            "roc_auc": 0.8393119198737938,
+            "f1": 0.629746835443038
         },
         "saved_as_best": true
     }
