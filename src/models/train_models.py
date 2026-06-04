@@ -312,7 +312,7 @@ def main() -> None:
 
     # 2. Guardar métricas del mejor modelo activo si ha sido guardado
     if should_save:
-        active_metrics_path = os.path.join(models_dir, "metrics.json")
+        active_metrics_path = os.path.join(models_dir, "best_model_info.json")
         with open(active_metrics_path, "w", encoding="utf-8") as f:
             json.dump(current_run_metrics, f, indent=4, ensure_ascii=False)
         print(f"Métricas del mejor modelo activo guardadas en: {active_metrics_path}")
