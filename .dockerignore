@@ -1,0 +1,11 @@
+venv/
+.git/
+data/
+notebooks/
+mlflow/
+__pycache__/
+*.pyc
+*.pyo
+.gitignore
+Dockerfile
+README.md

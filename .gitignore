@@ -225,3 +225,8 @@ data/processed/*
 
 models/*.pkl
 models/*.joblib
+
+# MLflow local runs and database
+mlflow/*.db
+mlflow/artifacts/
+mlflow/.trash/

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.3
+    container_name: mlflow_server
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - ../mlflow:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: churn_api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ../models:/app/models
+    environment:
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+    depends_on:
+      - mlflow
+    restart: unless-stopped
