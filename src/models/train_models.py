@@ -19,6 +19,8 @@ from src.visualization.visualize import generate_shap_summary
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 processed_data_path = os.path.join(BASE_DIR, "data", "processed", "data.csv")
 
+MODEL_VERSION = "0.1.0"
+
 # Umbral de probabilidad para la clasificación
 THRESHOLD = 0.5
 
@@ -278,6 +280,7 @@ def main() -> None:
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "threshold": THRESHOLD,
         "model_name": best_model_name,
+        "model_version": MODEL_VERSION,
         "hyperparameters": best_params,
         "validation_metrics": {
             "accuracy": results[best_model_name]["accuracy"],
