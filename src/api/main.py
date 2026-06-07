@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Body, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -35,6 +37,9 @@ def read_root():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (StarletteHTTPException, RequestValidationError)):
+        raise exc
+        
     return JSONResponse(
         status_code=500,
         content={"detail": "Error interno del servidor"}
@@ -132,7 +137,7 @@ predict_examples = {
 @app.post("/v1/predict")
 def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
     try:
-        df = pd.DataFrame([data.dict()])
+        df = pd.DataFrame([data.model_dump()])
         prob = app.model.predict_proba(df)[0][1]
         churn = bool(prob >= app.json_file["threshold"])
         return {
@@ -145,7 +150,7 @@ def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
 @app.post("/v2/predict")
 def predict_v2(data: ClientData = Body(openapi_examples=predict_examples)):
     try:
-        df = pd.DataFrame([data.dict()])
+        df = pd.DataFrame([data.model_dump()])
         prob = app.model.predict_proba(df)[0][1]
         churn = bool(prob >= app.json_file["threshold"])
         return {
