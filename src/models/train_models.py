@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 from sklearn.dummy import DummyClassifier
 from xgboost import XGBClassifier
 from src.data.make_dataset import load_dataset
+from src.data.features import preprocess_data
 from src.visualization.visualize import generate_shap_summary
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -36,42 +37,6 @@ numerical_cols = [
     "tenure", "MonthlyCharges", "TotalCharges", 
     "AvgChargePerMonth", "ChargeGap", "NumServices"
 ]
-
-# ==============================================================================
-# FEATURE ENGINEERING
-# ==============================================================================
-
-def preprocess_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Añade características calculadas al DataFrame de abandono de clientes.
-
-    Calcula nuevas variables: AvgChargePerMonth, ChargeGap, NewCustomer y NumServices.
-
-    Args:
-        df (pd.DataFrame): DataFrame limpio de abandono de clientes.
-
-    Returns:
-        pd.DataFrame: DataFrame con las nuevas columnas añadidas.
-    """
-    # Crear variables adicionales
-    # Variables económicas
-    df['AvgChargePerMonth'] = df['TotalCharges'] / (df['tenure'] + 1)
-    df['ChargeGap'] = df['TotalCharges'] - df['MonthlyCharges'] * df['tenure'] # Diferencia entre el gasto real y lo esperado
-
-    # Variables demográficas
-    df["NewCustomer"] = (df["tenure"] < 12).astype(int)
-
-    # Variables de servicio
-    df["NumServices"] = (
-        (df["InternetService"] != "No").astype(int) +
-        (df["OnlineSecurity"] == "Yes").astype(int) +
-        (df["OnlineBackup"] == "Yes").astype(int) +
-        (df["DeviceProtection"] == "Yes").astype(int) +
-        (df["TechSupport"] == "Yes").astype(int) +
-        (df["StreamingTV"] == "Yes").astype(int) +
-        (df["StreamingMovies"] == "Yes").astype(int)
-    )
-    
-    return df
 
 # ==============================================================================
 # CONSTRUCCIÓN DE PIPELINES DE MODELO
