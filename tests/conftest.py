@@ -45,24 +45,28 @@ def setup_dummy_model():
     info_path = os.path.join(models_dir, "best_model_info.json")
     
     # Solo los creamos si no existen (ej: entorno de GitHub Actions)
+    # Modificar solo la sección de creación del dummy en tests/conftest.py:
+
     if not os.path.exists(model_path) or not os.path.exists(info_path):
-        # 1. Crear un pipeline dummy de scikit-learn
+        # 1. Crear un DataFrame dummy con las 23 columnas esperadas por la API
+        dummy_data = {
+            "gender": [1], "SeniorCitizen": [0], "Partner": [0], "Dependents": [0],
+            "tenure": [1], "PhoneService": [1], "MultipleLines": ["No"], "InternetService": ["No"],
+            "OnlineSecurity": ["No"], "OnlineBackup": ["No"], "DeviceProtection": ["No"],
+            "TechSupport": ["No"], "StreamingTV": ["No"], "StreamingMovies": ["No"],
+            "Contract": ["Month-to-month"], "PaperlessBilling": [1], "PaymentMethod": ["Electronic check"],
+            "MonthlyCharges": [0.0], "TotalCharges": [0.0], "AvgChargePerMonth": [0.0],
+            "ChargeGap": [0.0], "NewCustomer": [1], "NumServices": [1]
+        }
+        df_dummy = pd.DataFrame(dummy_data)
+
+        # 2. Entrenar el DummyClassifier con la estructura correcta
         dummy_model = DummyClassifier(strategy="constant", constant=0)
-        dummy_model.fit(pd.DataFrame([[0]], columns=["dummy"]), [0])
+        dummy_model.fit(df_dummy, [0])
         pipeline = Pipeline([("model", dummy_model)])
         
         joblib.dump(pipeline, model_path)
         
-        # 2. Crear un JSON de metadatos dummy
-        dummy_info = {
-            "timestamp": "2026-06-07 00:00:00",
-            "threshold": 0.5,
-            "model_name": "dummy",
-            "model_version": "0.0.0",
-            "hyperparameters": {},
-            "validation_metrics": {"accuracy": 1.0, "roc_auc": 1.0, "f1": 1.0},
-            "test_metrics": {"accuracy": 1.0, "roc_auc": 1.0, "f1": 1.0},
-            "saved_as_best": True
-        }
+        # 3. Guardar metadatos JSON
         with open(info_path, "w", encoding="utf-8") as f:
             json.dump(dummy_info, f, indent=4)
