@@ -35,7 +35,7 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest
+        pytest -vv --showlocals
 
   build-and-push:
     runs-on: ubuntu-latest
