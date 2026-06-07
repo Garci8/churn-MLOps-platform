@@ -48,13 +48,13 @@ def setup_dummy_model():
     if not os.path.exists(model_path) or not os.path.exists(info_path):
         # 1. Crear un DataFrame dummy con las 23 columnas esperadas por la API
         dummy_data = {
-            "gender": [1], "SeniorCitizen": [0], "Partner": [0], "Dependents": [0],
-            "tenure": [1], "PhoneService": [1], "MultipleLines": ["No"], "InternetService": ["No"],
-            "OnlineSecurity": ["No"], "OnlineBackup": ["No"], "DeviceProtection": ["No"],
-            "TechSupport": ["No"], "StreamingTV": ["No"], "StreamingMovies": ["No"],
-            "Contract": ["Month-to-month"], "PaperlessBilling": [1], "PaymentMethod": ["Electronic check"],
-            "MonthlyCharges": [0.0], "TotalCharges": [0.0], "AvgChargePerMonth": [0.0],
-            "ChargeGap": [0.0], "NewCustomer": [1], "NumServices": [1]
+            "gender": [1,0], "SeniorCitizen": [0,1], "Partner": [0,1], "Dependents": [0,1],
+            "tenure": [1,20], "PhoneService": [1,0], "MultipleLines": ["No","Yes"], "InternetService": ["No","Yes"],
+            "OnlineSecurity": ["No","Yes"], "OnlineBackup": ["No","Yes"], "DeviceProtection": ["No","Yes"],
+            "TechSupport": ["No","Yes"], "StreamingTV": ["No","Yes"], "StreamingMovies": ["No","Yes"],
+            "Contract": ["Month-to-month","Month-to-month"], "PaperlessBilling": [1,0], "PaymentMethod": ["Electronic check","Electronic check"],
+            "MonthlyCharges": [0.0,0.0], "TotalCharges": [0.0,0.0], "AvgChargePerMonth": [0.0,0.0],
+            "ChargeGap": [0.0,0.0], "NewCustomer": [1,0], "NumServices": [1,2]
         }
         df_dummy = pd.DataFrame(dummy_data)
 
