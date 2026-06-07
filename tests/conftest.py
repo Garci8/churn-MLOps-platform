@@ -60,7 +60,7 @@ def setup_dummy_model():
 
         # 2. Entrenar el DummyClassifier con la estructura correcta
         dummy_model = DummyClassifier(strategy="constant", constant=0)
-        dummy_model.fit(df_dummy, [0])
+        dummy_model.fit(df_dummy, [0,1])
         pipeline = Pipeline([("model", dummy_model)])
         
         joblib.dump(pipeline, model_path)
