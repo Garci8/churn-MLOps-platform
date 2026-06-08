@@ -67,13 +67,25 @@ def setup_dummy_model():
 
         # 3. Crear un JSON de metadatos dummy
         dummy_info = {
-            "timestamp": "2026-06-07 00:00:00",
+            "timestamp": "2026-06-05 10:32:41",
             "threshold": 0.5,
-            "model_name": "dummy",
-            "model_version": "0.0.0",
-            "hyperparameters": {},
-            "validation_metrics": {"accuracy": 1.0, "roc_auc": 1.0, "f1": 1.0},
-            "test_metrics": {"accuracy": 1.0, "roc_auc": 1.0, "f1": 1.0},
+            "model_name": "rf",
+            "model_version": "0.1.0",
+            "hyperparameters": {
+                "n_estimators": 100,
+                "max_depth": 10,
+                "min_samples_split": 2
+            },
+            "validation_metrics": {
+                "accuracy": 0.7746212121212122,
+                "roc_auc": 0.8444081369661267,
+                "f1": 0.6404833836858006
+            },
+            "test_metrics": {
+                "accuracy": 0.7861873226111636,
+                "roc_auc": 0.8345883626224457,
+                "f1": 0.6366559485530546
+            },
             "saved_as_best": True
         }
         with open(info_path, "w", encoding="utf-8") as f:
