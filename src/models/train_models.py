@@ -27,9 +27,10 @@ THRESHOLD = 0.5
 
 # Columnas categóricas a las que se les aplicará One-Hot Encoding
 categorical_cols = [
+    "gender", "SeniorCitizen", "Partner", "Dependents", "PhoneService",
     "MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup", 
     "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies", 
-    "Contract", "PaymentMethod"
+    "Contract", "PaperlessBilling", "PaymentMethod"
 ]
 
 # Columnas numéricas que se escalarán (solo para Logistic Regression)
@@ -109,6 +110,8 @@ def main() -> None:
     X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.30, random_state=42, stratify=y)
     X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp)
     
+    breakpoint()
+
     # Calcular proporción de desbalanceo para XGBoost (negativos / positivos)
     num_neg = (y_train == 0).sum()
     num_pos = (y_train == 1).sum()

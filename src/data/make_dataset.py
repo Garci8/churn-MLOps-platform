@@ -62,19 +62,8 @@ def process_data(df: pd.DataFrame) -> pd.DataFrame:
     # Rellenar valores NaN con 0
     df['TotalCharges'] = df['TotalCharges'].fillna(0)
 
-    # Convertir variables binarias Yes/No a numéricas
-    binary_cols = []
-
-    for col in df.columns:
-        unique_values = set(df[col].dropna().unique())
-
-        if unique_values == {"Yes", "No"}:
-            binary_cols.append(col)
-    
-    df[binary_cols] = df[binary_cols].replace({"Yes": 1, "No": 0})
-
-    # Convertir variable binaria Gender (Male/Female) a numérica
-    df['gender'] = df['gender'].replace({'Male': 1, 'Female': 0})
+    # Convertir variable objetivo Churn (Yes/No) a numérica (1/0)
+    df['Churn'] = df['Churn'].replace({'Yes': 1, 'No': 0})
 
     return df
 

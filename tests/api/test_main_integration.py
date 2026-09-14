@@ -34,8 +34,7 @@ def test_invalid_predict_v1_endpoint(valid_payload):
         response = client.post("/v1/predict", json=invalid_payload)
         assert response.status_code == 422
     invalid_payload = valid_payload.copy()
-    mapping = {1:"Yes",0:"No"}
-    invalid_payload["Partner"] = mapping[invalid_payload["Partner"]]
+    invalid_payload["Partner"] = 12345
     with TestClient(app) as client:
         response = client.post("/v1/predict", json=invalid_payload)
         assert response.status_code == 422
@@ -55,8 +54,7 @@ def test_invalid_predict_v2_endpoint(valid_payload):
         response = client.post("/v2/predict", json=invalid_payload)
         assert response.status_code == 422
     invalid_payload = valid_payload.copy()
-    mapping = {1:"Yes",0:"No"}
-    invalid_payload["Partner"] = mapping[invalid_payload["Partner"]]
+    invalid_payload["Partner"] = 12345
     with TestClient(app) as client:
         response = client.post("/v2/predict", json=invalid_payload)
         assert response.status_code == 422

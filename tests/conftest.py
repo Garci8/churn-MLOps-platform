@@ -10,12 +10,12 @@ from sklearn.dummy import DummyClassifier
 def valid_payload():
     # Payload con datos controlados y correctos
     return {
-        "gender": 1,
+        "gender": "Male",
         "SeniorCitizen": 0,
-        "Partner": 0,
-        "Dependents": 0,
+        "Partner": "No",
+        "Dependents": "No",
         "tenure": 1,
-        "PhoneService": 1,
+        "PhoneService": "Yes",
         "MultipleLines": "No",
         "InternetService": "Fiber optic",
         "OnlineSecurity": "No",
@@ -25,7 +25,7 @@ def valid_payload():
         "StreamingTV": "No",
         "StreamingMovies": "No",
         "Contract": "Month-to-month",
-        "PaperlessBilling": 1,
+        "PaperlessBilling": "Yes",
         "PaymentMethod": "Electronic check",
         "MonthlyCharges": 70.05,
         "TotalCharges": 70.05,
@@ -48,11 +48,11 @@ def setup_dummy_model():
     if not os.path.exists(model_path) or not os.path.exists(info_path):
         # 1. Crear un DataFrame dummy con las 23 columnas esperadas por la API
         dummy_data = {
-            "gender": [1,0], "SeniorCitizen": [0,1], "Partner": [0,1], "Dependents": [0,1],
-            "tenure": [1,20], "PhoneService": [1,0], "MultipleLines": ["No","Yes"], "InternetService": ["No","Yes"],
+            "gender": ["Male","Female"], "SeniorCitizen": [0,1], "Partner": ["No","Yes"], "Dependents": ["No","Yes"],
+            "tenure": [1,20], "PhoneService": ["Yes","No"], "MultipleLines": ["No","Yes"], "InternetService": ["No","Yes"],
             "OnlineSecurity": ["No","Yes"], "OnlineBackup": ["No","Yes"], "DeviceProtection": ["No","Yes"],
             "TechSupport": ["No","Yes"], "StreamingTV": ["No","Yes"], "StreamingMovies": ["No","Yes"],
-            "Contract": ["Month-to-month","Month-to-month"], "PaperlessBilling": [1,0], "PaymentMethod": ["Electronic check","Electronic check"],
+            "Contract": ["Month-to-month","Month-to-month"], "PaperlessBilling": ["Yes","No"], "PaymentMethod": ["Electronic check","Electronic check"],
             "MonthlyCharges": [0.0,0.0], "TotalCharges": [0.0,0.0], "AvgChargePerMonth": [0.0,0.0],
             "ChargeGap": [0.0,0.0], "NewCustomer": [1,0], "NumServices": [1,2]
         }

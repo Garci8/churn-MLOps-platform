@@ -25,9 +25,7 @@ def test_make_dataset_shape(dataset):
 @pytest.mark.skipif(not RAW_DATA_EXISTS, reason="Dataset real no disponible")
 def test_clean_columns(dataset):
     clean_df = process_data(dataset)
-    binary_cols = [col for col in dataset.columns if set(dataset[col].unique()) == {"Yes", "No"}]
     assert 'customerID' not in clean_df.columns
     assert clean_df['TotalCharges'].isnull().sum() == 0 and clean_df['TotalCharges'].dtype == 'float64'
-    assert set(clean_df['gender'].unique()) == {0, 1}
-    for col in binary_cols:
-        assert set(clean_df[col].unique()) == {0, 1}
+    assert set(clean_df['gender'].unique()) == {"Male", "Female"}
+    assert set(clean_df['Churn'].unique()) == {0, 1}

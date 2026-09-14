@@ -46,13 +46,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Pydantic define la estructura de entrada
+# Pydantic define la estructura de entrada
 class ClientData(BaseModel):
-    gender: int
+    gender: str
     SeniorCitizen: int
-    Partner: int
-    Dependents: int
+    Partner: str
+    Dependents: str
     tenure: int
-    PhoneService: int
+    PhoneService: str
     MultipleLines: str
     InternetService: str
     OnlineSecurity: str
@@ -62,7 +63,7 @@ class ClientData(BaseModel):
     StreamingTV: str
     StreamingMovies: str
     Contract: str
-    PaperlessBilling: int
+    PaperlessBilling: str
     PaymentMethod: str
     MonthlyCharges: float
     TotalCharges: float
@@ -77,12 +78,12 @@ predict_examples = {
         "summary": "Cliente fidelizado",
         "description": "Cliente con contrato a largo plazo y servicios contratados, bajo riesgo.",
         "value": {
-            "gender": 0,
+            "gender": "Female",
             "SeniorCitizen": 0,
-            "Partner": 1,
-            "Dependents": 1,
+            "Partner": "Yes",
+            "Dependents": "Yes",
             "tenure": 72,
-            "PhoneService": 1,
+            "PhoneService": "Yes",
             "MultipleLines": "Yes",
             "InternetService": "DSL",
             "OnlineSecurity": "Yes",
@@ -92,7 +93,7 @@ predict_examples = {
             "StreamingTV": "Yes",
             "StreamingMovies": "Yes",
             "Contract": "Two year",
-            "PaperlessBilling": 0,
+            "PaperlessBilling": "No",
             "PaymentMethod": "Credit card (automatic)",
             "MonthlyCharges": 85.0,
             "TotalCharges": 6120.0,
@@ -106,12 +107,12 @@ predict_examples = {
         "summary": "Cliente de riesgo",
         "description": "Cliente nuevo, sin servicios de permanencia y contrato mes a mes.",
         "value": {
-            "gender": 1,
+            "gender": "Male",
             "SeniorCitizen": 1,
-            "Partner": 0,
-            "Dependents": 0,
+            "Partner": "No",
+            "Dependents": "No",
             "tenure": 1,
-            "PhoneService": 1,
+            "PhoneService": "Yes",
             "MultipleLines": "No",
             "InternetService": "Fiber optic",
             "OnlineSecurity": "No",
@@ -121,7 +122,7 @@ predict_examples = {
             "StreamingTV": "No",
             "StreamingMovies": "No",
             "Contract": "Month-to-month",
-            "PaperlessBilling": 1,
+            "PaperlessBilling": "Yes",
             "PaymentMethod": "Electronic check",
             "MonthlyCharges": 70.05,
             "TotalCharges": 70.05,
