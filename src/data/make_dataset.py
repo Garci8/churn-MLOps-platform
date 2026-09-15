@@ -1,9 +1,15 @@
 import pandas as pd
 import os
+import yaml
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-raw_data_path = os.path.join(BASE_DIR, "data", "raw", "WA_Fn-UseC_-Telco-Customer-Churn.csv")
-processed_data_path = os.path.join(BASE_DIR, "data", "processed", "data.csv")
+config_path = os.path.join(BASE_DIR, "config", "config.yaml")
+
+with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+
+raw_data_path = os.path.join(BASE_DIR,config["data"]["raw_path"])
+processed_data_path = os.path.join(BASE_DIR,config["data"]["processed_path"])
 
 # ==============================================================================
 # CARGA DE DATOS

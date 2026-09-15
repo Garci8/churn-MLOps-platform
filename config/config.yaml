@@ -1,0 +1,61 @@
+data:
+  raw_path: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  processed_path: "data/processed/data.csv"
+  split:
+    test_size: 0.30  # (15% Val + 15% Test)
+    val_size: 0.50   # 50% para Val (15% del total)
+    random_state: 42
+
+model:
+  version: "0.1.0"
+  threshold: 0.5
+  models_to_train:
+    - "logreg"
+    - "rf"
+    - "xgboost"
+  target_col: "Churn"
+  categorical_cols:
+    - "gender"
+    - "SeniorCitizen"
+    - "Partner"
+    - "Dependents"
+    - "PhoneService"
+    - "MultipleLines"
+    - "InternetService"
+    - "OnlineSecurity"
+    - "OnlineBackup"
+    - "DeviceProtection"
+    - "TechSupport"
+    - "StreamingTV"
+    - "StreamingMovies"
+    - "Contract"
+    - "PaperlessBilling"
+    - "PaymentMethod"
+  numerical_cols:
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+    - "AvgChargePerMonth"
+    - "ChargeGap"
+    - "NumServices"
+
+param_grids:
+  logreg:
+    model__C: [0.01, 0.1, 1, 10, 100]
+    model__l1_ratio: [0.0, 0.25, 0.5, 0.75, 1.0]
+    model__solver: ["saga"]
+  rf:
+    model__n_estimators: [50, 100, 200]
+    model__max_depth: [null, 10, 20]
+    model__min_samples_split: [2, 5, 10]
+  xgboost:
+    model__n_estimators: [50, 100, 200]
+    model__learning_rate: [0.01, 0.1, 0.2]
+    model__max_depth: [3, 5, 7]
+
+mlflow:
+  experiment_name: "churn-prediction"
+  registered_model_name: "churn-prediction-model"
+  skops_trusted_types:
+    - "xgboost.core.Booster"
+    - "xgboost.sklearn.XGBClassifier"

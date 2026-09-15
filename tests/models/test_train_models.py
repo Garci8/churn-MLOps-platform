@@ -46,30 +46,39 @@ def test_model_is_deterministic(valid_payload):
     assert det_prob_1 == pytest.approx(det_prob_2) 
     assert det_prob_2 == pytest.approx(det_prob_3)
 
+from src.data.features import preprocess_data
+
 def test_model_directionality(valid_payload):
     # Test de direccionalidad: verificar lógica de negocio de variables clave
-    higher_tenure_payload = valid_payload.copy()
-    higher_tenure_payload["tenure"] = 72
     model = joblib.load(MODEL_PATH)
 
-    og_valid_df = pd.DataFrame([valid_payload])
-    higher_tenure_df = pd.DataFrame([higher_tenure_payload])
+    og_valid_df = preprocess_data(pd.DataFrame([valid_payload]))
+
+    higher_tenure_payload = valid_payload.copy()
+    higher_tenure_payload["tenure"] = 72
+    higher_tenure_df = preprocess_data(pd.DataFrame([higher_tenure_payload]))
 
     det_prob_og = model.predict_proba(og_valid_df)[:, 1]
     det_prob_tenure = model.predict_proba(higher_tenure_df)[:, 1]
 
     # A mayor antigüedad (tenure), menor o igual probabilidad de abandono (churn)
-    assert det_prob_tenure<=det_prob_og
+    assert det_prob_tenure <= det_prob_og
+
+    base_charge_payload = valid_payload.copy()
+    base_charge_payload["MonthlyCharges"] = 20.0
+    base_charge_payload["TotalCharges"] = 20.0
+    base_charge_df = preprocess_data(pd.DataFrame([base_charge_payload]))
 
     higher_monthly_charge_payload = valid_payload.copy()
-    higher_monthly_charge_payload["MonthlyCharges"] = 300
+    higher_monthly_charge_payload["MonthlyCharges"] = 100.0
+    higher_monthly_charge_payload["TotalCharges"] = higher_monthly_charge_payload["MonthlyCharges"] * higher_monthly_charge_payload["tenure"]
+    higher_monthly_charge_df = preprocess_data(pd.DataFrame([higher_monthly_charge_payload]))
 
-    higher_monthly_charge_df = pd.DataFrame([higher_monthly_charge_payload])
-
+    det_prob_base = model.predict_proba(base_charge_df)[:, 1]
     det_prob_higher_monthly_charge = model.predict_proba(higher_monthly_charge_df)[:, 1]
 
     # A mayor coste mensual (MonthlyCharges), mayor o igual probabilidad de abandono (churn)
-    assert det_prob_og<=det_prob_higher_monthly_charge
+    assert det_prob_base <= det_prob_higher_monthly_charge
 
 
 
