@@ -21,5 +21,9 @@ test:
 	@echo "==> Ejecutando pruebas unitarias..."
 	PYTHONPATH=. pytest tests/
 
+monitor:
+	@echo "==> Generando informe de Data & Target Drift con Evidently..."
+	PYTHONPATH=. $(PYTHON) src/visualization/monitor_drift.py
+
 pipeline: data train test
 all: pipeline

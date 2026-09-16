@@ -230,3 +230,9 @@ models/*.joblib
 mlflow/*.db
 mlflow/artifacts/
 mlflow/.trash/
+
+# Logs and Reports runtime outputs
+logs/*.jsonl
+!logs/.gitkeep
+reports/*.html
+!reports/.gitkeep
