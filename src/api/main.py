@@ -9,12 +9,18 @@ import numpy as np
 import pandas as pd
 import json
 import os
+from datetime import datetime
 from contextlib import asynccontextmanager
+import yaml
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best_model.joblib")
 MODEL_INFO_PATH = os.path.join(BASE_DIR, "models", "best_model_info.json")
 
+config_path = os.path.join(BASE_DIR, "config", "config.yaml")
+
+with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
 
 # Cargar modelo
 @asynccontextmanager
@@ -134,6 +140,22 @@ predict_examples = {
     }
 }
 
+def log_prediction(input_data: dict, prediction_result: dict, endpoint_version: str):
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "endpoint": endpoint_version,
+        "model_name": app.json_file.get("model_name"),
+        "model_version": app.json_file.get("model_version"),
+        "inputs": input_data,
+        "prediction": prediction_result
+    }
+    
+    log_path = os.path.join(BASE_DIR, config["data"]["predictions_log_path"])
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+
 # Endpoint de predicción V1 (solo Churn: true/false)
 @app.post("/v1/predict")
 def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
@@ -141,9 +163,9 @@ def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
         df = pd.DataFrame([data.model_dump()])
         prob = app.model.predict_proba(df)[0][1]
         churn = bool(prob >= app.json_file["threshold"])
-        return {
-            "churn": churn
-        }
+        result = {"churn": churn}
+        log_prediction(input_data=data.model_dump(),prediction_result=result,endpoint_version="v1")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al predecir en V1: {str(e)}")
 
@@ -154,10 +176,9 @@ def predict_v2(data: ClientData = Body(openapi_examples=predict_examples)):
         df = pd.DataFrame([data.model_dump()])
         prob = app.model.predict_proba(df)[0][1]
         churn = bool(prob >= app.json_file["threshold"])
-        return {
-            "churn": churn,
-            "probabilidad_churn": round(prob, 4)
-        }
+        result = {"churn": churn, "probabilidad_churn": round(prob, 4)}
+        log_prediction(input_data=data.model_dump(),prediction_result=result,endpoint_version="v2")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al predecir en V2: {str(e)}")
 
