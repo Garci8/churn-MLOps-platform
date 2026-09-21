@@ -201,13 +201,19 @@ def main() -> None:
             print(f"{model_name:<15} | {metrics['accuracy']:<10.4f} | {metrics['roc_auc']:<10.4f} | {metrics['f1']:<10.4f}")
         print("=" * 55)
 
-        # Seleccionar el mejor modelo basado en F1-Score en Validación (excluyendo el baseline dummy)
+        # Seleccionar el mejor modelo (Champion) y el segundo mejor (Candidate/Challenger) basándose en F1-Score
         candidate_results = {k: v for k, v in results.items() if k != "dummy"}
-        best_model_name = max(candidate_results, key=lambda k: candidate_results[k]["f1"])
+        sorted_candidates = sorted(candidate_results.keys(), key=lambda k: candidate_results[k]["f1"], reverse=True)
+        best_model_name = sorted_candidates[0]
+        second_model_name = sorted_candidates[1] if len(sorted_candidates) > 1 else sorted_candidates[0]
+
         mlflow.log_param("best_model_name", best_model_name)
+        mlflow.log_param("candidate_model_name", second_model_name)
 
         registered_model_name = config["mlflow"]["registered_model_name"]
         best_pipeline = pipelines[best_model_name]
+        second_pipeline = pipelines[second_model_name]
+
         mlflow.sklearn.log_model(
             sk_model=best_pipeline,
             name="best_model",
@@ -215,7 +221,8 @@ def main() -> None:
             skops_trusted_types=TRUSTED_TYPES
         )
         
-        print(f"\nMejor modelo seleccionado: {best_model_name}")
+        print(f"\nMejor modelo seleccionado (Champion): {best_model_name}")
+        print(f"Segundo mejor modelo seleccionado (Candidate/Challenger): {second_model_name}")
 
         # Evaluar el mejor modelo en el conjunto de Test
         y_test_prob = best_pipeline.predict_proba(X_test)[:, 1]
@@ -238,6 +245,7 @@ def main() -> None:
         # Guardar el pipeline del mejor modelo con joblib solo si supera al existente
         models_dir = os.path.join(BASE_DIR, "models")
         model_path = os.path.join(models_dir, "best_model.joblib")
+        candidate_model_path = os.path.join(models_dir, "candidate_model.joblib")
         should_save = True
 
         if os.path.exists(model_path):
@@ -253,7 +261,7 @@ def main() -> None:
 
                 if current_f1 <= previous_f1:
                     should_save = False
-                    print("\nEl nuevo modelo no supera al anteriormente guardado. No se sobrescribe el archivo.")
+                    print("\n[ROLLBACK] El nuevo modelo no supera al anteriormente guardado. Se mantiene el modelo activo anterior.")
                 else:
                     print("\n¡El nuevo modelo es mejor! Sobrescribiendo el archivo guardado...")
             except Exception as e:
@@ -262,7 +270,23 @@ def main() -> None:
         if should_save:
             os.makedirs(models_dir, exist_ok=True)
             joblib.dump(best_pipeline, model_path)
-            print(f"Pipeline del mejor modelo guardado con éxito en: {model_path}")
+            joblib.dump(second_pipeline, candidate_model_path)
+            print(f"Pipeline del mejor modelo guardado en: {model_path}")
+            print(f"Pipeline del modelo candidato guardado en: {candidate_model_path}")
+
+            # Guardar metadatos del candidato
+            candidate_metrics_path = os.path.join(models_dir, "candidate_model_info.json")
+            candidate_info = {
+                "model_name": second_model_name,
+                "model_version": MODEL_VERSION,
+                "threshold": THRESHOLD,
+                "val_accuracy": results[second_model_name]["accuracy"],
+                "val_roc_auc": results[second_model_name]["roc_auc"],
+                "val_f1": results[second_model_name]["f1"],
+                "saved_at": datetime.now().isoformat()
+            }
+            with open(candidate_metrics_path, "w", encoding="utf-8") as f:
+                json.dump(candidate_info, f, indent=4, ensure_ascii=False)
 
         # Extraer los mejores hiperparámetros encontrados para el modelo seleccionado
         model_step = best_pipeline.named_steps['model']

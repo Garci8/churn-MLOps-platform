@@ -13,16 +13,20 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 import yaml
 
+import random
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "best_model.joblib")
 MODEL_INFO_PATH = os.path.join(BASE_DIR, "models", "best_model_info.json")
+CANDIDATE_MODEL_PATH = os.path.join(BASE_DIR, "models", "candidate_model.joblib")
+CANDIDATE_MODEL_INFO_PATH = os.path.join(BASE_DIR, "models", "candidate_model_info.json")
 
 config_path = os.path.join(BASE_DIR, "config", "config.yaml")
 
 with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-# Cargar modelo
+# Cargar modelos (Mejor y Candidate para A/B Testing)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Al iniciar
@@ -30,10 +34,25 @@ async def lifespan(app: FastAPI):
         app.model = joblib.load(f)
     with open(MODEL_INFO_PATH, "rb") as f:
         app.json_file = json.load(f)
+
+    if os.path.exists(CANDIDATE_MODEL_PATH) and os.path.exists(CANDIDATE_MODEL_INFO_PATH):
+        try:
+            with open(CANDIDATE_MODEL_PATH, "rb") as f:
+                app.candidate_model = joblib.load(f)
+            with open(CANDIDATE_MODEL_INFO_PATH, "rb") as f:
+                app.candidate_json_file = json.load(f)
+        except Exception:
+            app.candidate_model = app.model
+            app.candidate_json_file = app.json_file
+    else:
+        app.candidate_model = app.model
+        app.candidate_json_file = app.json_file
     yield
     # Al cerrar
     app.model = None
     app.json_file = None
+    app.candidate_model = None
+    app.candidate_json_file = None
 
 app = FastAPI(lifespan=lifespan)
 
@@ -51,7 +70,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Error interno del servidor"}
     )
 
-# Pydantic define la estructura de entrada
 # Pydantic define la estructura de entrada
 class ClientData(BaseModel):
     gender: str
@@ -140,12 +158,12 @@ predict_examples = {
     }
 }
 
-def log_prediction(input_data: dict, prediction_result: dict, endpoint_version: str):
+def log_prediction(input_data: dict, prediction_result: dict, endpoint_version: str, model_info_used: dict):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "endpoint": endpoint_version,
-        "model_name": app.json_file.get("model_name"),
-        "model_version": app.json_file.get("model_version"),
+        "model_name": model_info_used.get("model_name"),
+        "model_version": model_info_used.get("model_version"),
         "inputs": input_data,
         "prediction": prediction_result
     }
@@ -161,10 +179,16 @@ def log_prediction(input_data: dict, prediction_result: dict, endpoint_version: 
 def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
     try:
         df = pd.DataFrame([data.model_dump()])
-        prob = app.model.predict_proba(df)[0][1]
-        churn = bool(prob >= app.json_file["threshold"])
-        result = {"churn": churn}
-        log_prediction(input_data=data.model_dump(),prediction_result=result,endpoint_version="v1")
+        # A/B Testing: 80% Champion (A), 20% Candidate (B)
+        use_candidate = random.random() < 0.2 and app.candidate_model is not None
+        model = app.candidate_model if use_candidate else app.model
+        info = app.candidate_json_file if use_candidate else app.json_file
+        variant = "B" if use_candidate else "A"
+
+        prob = model.predict_proba(df)[0][1]
+        churn = bool(prob >= info["threshold"])
+        result = {"churn": churn, "model_variant": variant}
+        log_prediction(input_data=data.model_dump(), prediction_result=result, endpoint_version="v1", model_info_used=info)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al predecir en V1: {str(e)}")
@@ -174,10 +198,16 @@ def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
 def predict_v2(data: ClientData = Body(openapi_examples=predict_examples)):
     try:
         df = pd.DataFrame([data.model_dump()])
-        prob = app.model.predict_proba(df)[0][1]
-        churn = bool(prob >= app.json_file["threshold"])
-        result = {"churn": churn, "probabilidad_churn": round(prob, 4)}
-        log_prediction(input_data=data.model_dump(),prediction_result=result,endpoint_version="v2")
+        # A/B Testing: 80% Champion (A), 20% Candidate (B)
+        use_candidate = random.random() < 0.2 and app.candidate_model is not None
+        model = app.candidate_model if use_candidate else app.model
+        info = app.candidate_json_file if use_candidate else app.json_file
+        variant = "B" if use_candidate else "A"
+
+        prob = model.predict_proba(df)[0][1]
+        churn = bool(prob >= info["threshold"])
+        result = {"churn": churn, "probabilidad_churn": round(prob, 4), "model_variant": variant}
+        log_prediction(input_data=data.model_dump(), prediction_result=result, endpoint_version="v2", model_info_used=info)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al predecir en V2: {str(e)}")
