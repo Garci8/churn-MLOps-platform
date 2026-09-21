@@ -36,12 +36,12 @@ Plataforma completa de predicción de abandono de clientes (churn) para una empr
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │  Datos crudos│────▶│  Pipeline de     │────▶│  Datos procesados│
 │  (CSV)       │     │  datos (Limpieza │     │  (data.csv)      │
-└──────────────┘     │  + Características│    └────────┬─────────┘
+└──────────────┘     │ + Características)│    └────────┬─────────┘
                      └──────────────────┘              │
                                                        ▼
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │  MLflow      │◀────│  Pipeline de     │◀────│  Train / Val /   │
-│  (Seguimiento│     │  entrenamiento   │     │  Test            │
+│ (Seguimiento)│     │  entrenamiento   │     │  Test            │
 └──────────────┘     │  (GridSearchCV)  │     └──────────────────┘
                      └───────┬──────────┘
                              │
