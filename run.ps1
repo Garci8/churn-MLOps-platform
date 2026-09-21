@@ -30,17 +30,17 @@ function Run-Monitor {
 }
 
 switch ($Target.ToLower()) {
-    "data"     { Run-Data }
-    "train"    { Run-Train }
-    "test"     { Run-Test }
-    "monitor"  { Run-Monitor }
-    "pipeline" { Run-Data; Run-Train; Run-Test }
+    "data"            { Run-Data }
+    "train"           { Run-Train }
+    "test"            { Run-Test }
+    "monitor"         { Run-Monitor }
+    "pipeline"        { Run-Data; Run-Train; Run-Test }
     default {
         Write-Host "Comandos disponibles:" -ForegroundColor Yellow
-        Write-Host "  .\run.ps1 data     - Ejecuta la limpieza y procesamiento de datos"
-        Write-Host "  .\run.ps1 train    - Entrena los modelos y los registra en MLflow"
-        Write-Host "  .\run.ps1 test     - Ejecuta la suite de pruebas unitarias e integración"
-        Write-Host "  .\run.ps1 monitor  - Genera el informe de Data & Target Drift (Evidently)"
-        Write-Host "  .\run.ps1 pipeline - Ejecuta todo el pipeline (data -> train -> test)"
+        Write-Host "  .\run.ps1 data            - Ejecuta la limpieza y procesamiento de datos"
+        Write-Host "  .\run.ps1 train           - Entrena los modelos y los registra en MLflow"
+        Write-Host "  .\run.ps1 test            - Ejecuta la suite de pruebas unitarias e integración"
+        Write-Host "  .\run.ps1 monitor         - Genera el informe de Data & Target Drift (Evidently)"
+        Write-Host "  .\run.ps1 pipeline        - Ejecuta todo el pipeline (data -> train -> test)"
     }
 }

@@ -40,6 +40,10 @@ jobs:
       run: |
         make pipeline
 
+    - name: Run drift monitoring check
+      run: |
+        make monitor
+
   build-and-push:
     runs-on: ubuntu-latest
     needs: lint-and-test

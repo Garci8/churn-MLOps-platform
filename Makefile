@@ -1,13 +1,14 @@
-.PHONY: all data train test pipeline help
+.PHONY: all data train test monitor pipeline help
 
 PYTHON = python
 
 help:
 	@echo "Comandos disponibles:"
-	@echo "  make data     - Ejecuta la limpieza y procesamiento de datos"
-	@echo "  make train    - Entrena los modelos y los registra en MLflow"
-	@echo "  make test     - Ejecuta la suite de pruebas unitarias e integración con pytest"
-	@echo "  make pipeline - Ejecuta todo el pipeline (data -> train -> test)"
+	@echo "  make data            - Ejecuta la limpieza y procesamiento de datos"
+	@echo "  make train           - Entrena los modelos y los registra en MLflow"
+	@echo "  make test            - Ejecuta la suite de pruebas unitarias e integración con pytest"
+	@echo "  make monitor         - Genera el informe de Data & Target Drift con Evidently"
+	@echo "  make pipeline        - Ejecuta todo el pipeline (data -> train -> test)"
 
 data:
 	@echo "==> Ejecutando procesamiento de datos..."

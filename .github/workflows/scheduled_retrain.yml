@@ -1,0 +1,46 @@
+name: Scheduled & Auto-Retrain Pipeline
+
+on:
+  schedule:
+    # Ejecutar el primer día de cada mes a las 00:00 UTC (Política Temporal)
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+    # Permite lanzamiento manual desde la interfaz de GitHub Actions
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  scheduled-retrain:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run data processing
+      run: |
+        make data
+
+    - name: Execute model retraining & MLflow tracking
+      run: |
+        make train
+
+    - name: Run test suite verification
+      run: |
+        make test
+
+    - name: Check Data Drift and execute auto-retrain if detected
+      run: |
+        make monitor
