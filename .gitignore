@@ -218,7 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 data/raw/*
-!data/raw/.gitkeep
+!data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
 
 data/processed/*
 !data/processed/.gitkeep
