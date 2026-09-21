@@ -34,7 +34,26 @@ categorical_cols = config["model"]["categorical_cols"]
 numerical_cols = config["model"]["numerical_cols"]
 TRUSTED_TYPES = config["mlflow"]["skops_trusted_types"]
 
-mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"))
+import socket
+
+def get_tracking_uri() -> str:
+    default_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+    if default_uri.startswith("http://") or default_uri.startswith("https://"):
+        try:
+            # Extraer host y puerto
+            parts = default_uri.replace("http://", "").replace("https://", "").split(":")
+            host = parts[0]
+            port = int(parts[1].split("/")[0]) if len(parts) > 1 else 80
+            with socket.create_connection((host, port), timeout=1.5):
+                return default_uri
+        except (socket.timeout, ConnectionRefusedError, OSError, ValueError):
+            pass
+    # Fallback local sqlite si el servidor HTTP no está accesible
+    db_path = os.path.join(BASE_DIR, "mlflow", "mlflow.db")
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    return f"sqlite:///{db_path}"
+
+mlflow.set_tracking_uri(get_tracking_uri())
 mlflow.set_experiment(config["mlflow"]["experiment_name"])
 
 # ==============================================================================

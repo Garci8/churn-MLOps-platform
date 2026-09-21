@@ -61,6 +61,10 @@ def create_report():
         total = drift_result.get("number_of_columns", 0)
         share = drift_result.get("share_of_drifted_columns", 0) * 100
         print(f"\n[ALERTA DRIFT] S'ha detectat Data Drift global! ({drifted}/{total} columnes afectades - {share:.1f}%).")
+        print("\n[AUTO-RETRAIN] Desencadenant el reentrenament automàtic del model...")
+        
+        from src.models.train_models import main as train_main
+        train_main()
     else:
         print("\n[OK] No s'ha detectat Data Drift significatiu a les dades de producció.")
 
