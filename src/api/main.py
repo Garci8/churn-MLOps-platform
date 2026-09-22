@@ -185,7 +185,7 @@ def predict_v1(data: ClientData = Body(openapi_examples=predict_examples)):
         info = app.candidate_json_file if use_candidate else app.json_file
         variant = "B" if use_candidate else "A"
 
-        prob = model.predict_proba(df)[0][1]
+        prob = float(model.predict_proba(df)[0][1])
         churn = bool(prob >= info["threshold"])
         result = {"churn": churn, "model_variant": variant}
         log_prediction(input_data=data.model_dump(), prediction_result=result, endpoint_version="v1", model_info_used=info)
@@ -204,7 +204,7 @@ def predict_v2(data: ClientData = Body(openapi_examples=predict_examples)):
         info = app.candidate_json_file if use_candidate else app.json_file
         variant = "B" if use_candidate else "A"
 
-        prob = model.predict_proba(df)[0][1]
+        prob = float(model.predict_proba(df)[0][1])
         churn = bool(prob >= info["threshold"])
         result = {"churn": churn, "probabilidad_churn": round(prob, 4), "model_variant": variant}
         log_prediction(input_data=data.model_dump(), prediction_result=result, endpoint_version="v2", model_info_used=info)
